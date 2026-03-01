@@ -15,27 +15,38 @@ Docker
 TypeScript
 
 🚀 Setup
+
 1️⃣ Install dependencies
 npm install
+
 2️⃣ Start PostgreSQL (Docker)
 docker compose up -d
+
 3️⃣ Run Migration
 npx prisma migrate dev --name init
 npx prisma generate
+
 4️⃣ Seed Data
 npm run seed
+
 5️⃣ Start Server
 npm run dev
 
-Server:
 
-http://localhost:3000
+Server:http://localhost:3000
+
 🏗 Project Structure
+
 src/
+
  ├── routes/
+ 
  ├── services/
+ 
  ├── repository/
+ 
  ├── lib/prisma.ts
+ 
  └── server.ts
 
 Architecture:
@@ -90,3 +101,4 @@ Due date และ return date ถูกเก็บใน LoanItem
 Seed data พร้อมใช้งานหลังรัน npm run seed
 
 รองรับ search หลาย field และ nested relation
+
