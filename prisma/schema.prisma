@@ -4,11 +4,70 @@
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
+// generator client {
+//   provider = "prisma-client"
+//   output   = "../src/generated/prisma"
+// }
+
+// datasource db {
+//   provider = "postgresql"
+// }
+
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+model Author {
+  id          Int     @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  affiliation String
+  books       Book[]
+}
+
+model Book {
+  id        Int     @id @default(autoincrement())
+  title     String
+  isbn      String  @unique
+  category  String
+
+  authorId  Int
+  author    Author  @relation(fields: [authorId], references: [id])
+
+  loanItems LoanItem[]
+}
+
+model Member {
+  id         Int     @id @default(autoincrement())
+  memberCode String  @unique
+  firstName  String
+  lastName   String
+  phone      String
+
+  loans      Loan[]
+}
+
+model Loan {
+  id         Int       @id @default(autoincrement())
+  memberId   Int
+  member     Member    @relation(fields: [memberId], references: [id])
+
+  borrowedAt DateTime  @default(now())
+  items      LoanItem[]
+}
+
+model LoanItem {
+  id         Int       @id @default(autoincrement())
+  loanId     Int
+  loan       Loan      @relation(fields: [loanId], references: [id])
+
+  bookId     Int
+  book       Book      @relation(fields: [bookId], references: [id])
+
+  dueAt      DateTime
+  returnedAt DateTime?
 }
