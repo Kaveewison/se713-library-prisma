@@ -1,0 +1,301 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Library Web</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        color: white;
+        text-align: center;
+        font-size: 3rem;
+        margin-bottom: 30px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 30px;
+      }
+
+      button {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 25px;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .stats {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .stats h2 {
+        color: #667eea;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+      }
+
+      .stats .count {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #764ba2;
+      }
+
+      .books-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 25px;
+      }
+
+      .book-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        transition: all 0.3s ease;
+        animation: fadeIn 0.5s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .book-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+      }
+
+      .book-title {
+        color: #667eea;
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+      }
+
+      .book-info {
+        color: #555;
+        line-height: 1.8;
+      }
+
+      .book-info p {
+        margin-bottom: 8px;
+      }
+
+      .book-info strong {
+        color: #764ba2;
+        display: inline-block;
+        width: 80px;
+      }
+
+      .book-category {
+        display: inline-block;
+        background: #667eea;
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-top: 10px;
+      }
+
+      .loading {
+        text-align: center;
+        color: white;
+        font-size: 1.5rem;
+        padding: 40px;
+      }
+
+      .error {
+        background: #ff6b6b;
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📚 Library Management</h1>
+      
+      <div class="controls">
+        <button id="loadBooks">Load Books</button>
+        <button id="loadAuthors">Load Authors</button>
+        <button id="loadMembers">Load Members</button>
+      </div>
+
+      <div id="stats" style="display: none;"></div>
+      <div id="output"></div>
+    </div>
+
+    <script>
+      const API_BASE = '';
+
+      document.getElementById("loadBooks").onclick = async () => {
+        await loadData('/books?pageSize=10&pageNo=1', renderBooks);
+      };
+
+      document.getElementById("loadAuthors").onclick = async () => {
+        await loadData('/authors?pageSize=10&pageNo=1', renderAuthors);
+      };
+
+      document.getElementById("loadMembers").onclick = async () => {
+        await loadData('/members?pageSize=10&pageNo=1', renderMembers);
+      };
+
+      async function loadData(endpoint, renderFunction) {
+        const output = document.getElementById('output');
+        const stats = document.getElementById('stats');
+        
+        output.innerHTML = '<div class="loading">Loading...</div>';
+        stats.style.display = 'none';
+
+        try {
+          const res = await fetch(API_BASE + endpoint);
+          if (!res.ok) throw new Error('Failed to fetch data');
+          
+          const data = await res.json();
+          const total = res.headers.get('x-total-count');
+          
+          if (total) {
+            stats.style.display = 'block';
+            stats.innerHTML = `
+              <h2>Total Records</h2>
+              <div class="count">${total}</div>
+            `;
+          }
+          
+          renderFunction(data);
+        } catch (error) {
+          output.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+        }
+      }
+
+      function renderBooks(books) {
+        const output = document.getElementById('output');
+        if (!books || books.length === 0) {
+          output.innerHTML = '<div class="loading">No books found</div>';
+          return;
+        }
+
+        const html = `
+          <div class="books-grid">
+            ${books.map(book => `
+              <div class="book-card">
+                <div class="book-title">${book.title}</div>
+                <div class="book-info">
+                  <p><strong>ISBN:</strong> ${book.isbn}</p>
+                  <p><strong>Author:</strong> ${book.author ? `${book.author.firstName} ${book.author.lastName}` : 'Unknown'}</p>
+                  ${book.author?.affiliation ? `<p><strong>Affiliation:</strong> ${book.author.affiliation}</p>` : ''}
+                  <span class="book-category">${book.category}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        output.innerHTML = html;
+      }
+
+      function renderAuthors(authors) {
+        const output = document.getElementById('output');
+        if (!authors || authors.length === 0) {
+          output.innerHTML = '<div class="loading">No authors found</div>';
+          return;
+        }
+
+        const html = `
+          <div class="books-grid">
+            ${authors.map(author => `
+              <div class="book-card">
+                <div class="book-title">${author.firstName} ${author.lastName}</div>
+                <div class="book-info">
+                  <p><strong>ID:</strong> ${author.id}</p>
+                  ${author.affiliation ? `<p><strong>Affiliation:</strong> ${author.affiliation}</p>` : ''}
+                  ${author.books ? `<p><strong>Books:</strong> ${author.books.length} book(s)</p>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        output.innerHTML = html;
+      }
+
+      function renderMembers(members) {
+        const output = document.getElementById('output');
+        if (!members || members.length === 0) {
+          output.innerHTML = '<div class="loading">No members found</div>';
+          return;
+        }
+
+        const html = `
+          <div class="books-grid">
+            ${members.map(member => `
+              <div class="book-card">
+                <div class="book-title">${member.firstName} ${member.lastName}</div>
+                <div class="book-info">
+                  <p><strong>Code:</strong> ${member.memberCode}</p>
+                  <p><strong>Phone:</strong> ${member.phone}</p>
+                  ${member.loans ? `<p><strong>Loans:</strong> ${member.loans.length} loan(s)</p>` : ''}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        output.innerHTML = html;
+      }
+
+      // Auto-load books on page load
+      window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('loadBooks').click();
+      });
+    </script>
+  </body>
+</html>

@@ -6,8 +6,14 @@ import memberRoute from "./routes/MemberRoute";
 const app = express();
 app.use(express.json());
 
+app.use(express.static("public"));
+
+// app.get("/", (_req, res) => {
+//   res.send("Library API is running");
+// });
+
 app.get("/", (_req, res) => {
-  res.send("Library API is running");
+  res.sendFile(process.cwd() + "/public/index.html");
 });
 
 app.use("/books", bookRoute);
@@ -16,5 +22,5 @@ app.use("/members", memberRoute);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+  console.log(`Server running on port ${port}`);
 });
